@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { BackgroundCircles } from "@/components/ui/background-circles";
 import { AIVoiceInput } from "@/components/ui/ai-voice-input";
 import { WebRTCClient } from "@/lib/webrtc-client";
@@ -12,6 +12,21 @@ export function BackgroundCircleProvider() {
     const [webrtcClient, setWebrtcClient] = useState<WebRTCClient | null>(null);
     const [audioLevel, setAudioLevel] = useState(0);
     const audioRef = useRef<HTMLAudioElement>(null);
+
+    // Memoize callbacks to prevent recreation on each render
+    const handleConnected = useCallback(() => setIsConnected(true), []);
+    const handleDisconnected = useCallback(() => setIsConnected(false), []);
+    
+    const handleAudioStream = useCallback((stream: MediaStream) => {
+        if (audioRef.current) {
+            audioRef.current.srcObject = stream;
+        }
+    }, []);
+    
+    const handleAudioLevel = useCallback((level: number) => {
+        // Apply some smoothing to the audio level
+        setAudioLevel(prev => prev * 0.7 + level * 0.3);
+    }, []);
 
     // Get all available variants
     const variants = Object.keys(
@@ -26,26 +41,19 @@ export function BackgroundCircleProvider() {
     };
 
     useEffect(() => {
-        // Initialize WebRTC client
+        // Initialize WebRTC client with memoized callbacks
         const client = new WebRTCClient({
-            onConnected: () => setIsConnected(true),
-            onDisconnected: () => setIsConnected(false),
-            onAudioStream: (stream) => {
-                if (audioRef.current) {
-                    audioRef.current.srcObject = stream;
-                }
-            },
-            onAudioLevel: (level) => {
-                // Apply some smoothing to the audio level
-                setAudioLevel(prev => prev * 0.7 + level * 0.3);
-            }
+            onConnected: handleConnected,
+            onDisconnected: handleDisconnected,
+            onAudioStream: handleAudioStream,
+            onAudioLevel: handleAudioLevel
         });
         setWebrtcClient(client);
 
         return () => {
             client.disconnect();
         };
-    }, []);
+    }, [handleConnected, handleDisconnected, handleAudioStream, handleAudioLevel]);
 
     const handleStart = () => {
         webrtcClient?.connect();

@@ -125,17 +125,26 @@ export class WebRTCClient {
     private startAnalysis() {
         if (!this.analyser || !this.dataArray || !this.options.onAudioLevel) return;
         
+        // Add throttling to prevent too many updates
+        let lastUpdateTime = 0;
+        const throttleInterval = 100; // Only update every 100ms
+        
         const analyze = () => {
             this.analyser!.getByteFrequencyData(this.dataArray!);
             
-            // Calculate average volume level (0-1)
-            let sum = 0;
-            for (let i = 0; i < this.dataArray!.length; i++) {
-                sum += this.dataArray![i];
+            const currentTime = Date.now();
+            // Only update if enough time has passed since last update
+            if (currentTime - lastUpdateTime > throttleInterval) {
+                // Calculate average volume level (0-1)
+                let sum = 0;
+                for (let i = 0; i < this.dataArray!.length; i++) {
+                    sum += this.dataArray![i];
+                }
+                const average = sum / this.dataArray!.length / 255;
+                
+                this.options.onAudioLevel!(average);
+                lastUpdateTime = currentTime;
             }
-            const average = sum / this.dataArray!.length / 255;
-            
-            this.options.onAudioLevel!(average);
             
             this.animationFrameId = requestAnimationFrame(analyze);
         };

@@ -3,4 +3,4 @@ import os
 
 load_dotenv()
 
-DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
+LLM_API_KEY = os.getenv("LLM_API_KEY")

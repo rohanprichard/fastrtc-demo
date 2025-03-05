@@ -32,6 +32,7 @@ def echo(audio):
     stt_time = time.time()
     logging.info("Performing STT")
     prompt = stt_model.stt(audio)
+    logging.info(f"STT prompt: {prompt}")
     messages.append({"role": "user", "content": prompt})
     logging.info(f"STT took {time.time() - stt_time} seconds")
 
@@ -50,14 +51,14 @@ def echo(audio):
 
 stream = Stream(ReplyOnPause(echo,
             algo_options=AlgoOptions(
-                audio_chunk_duration=0.6,
+                audio_chunk_duration=0.8,
                 started_talking_threshold=0.25,
                 speech_threshold=0.2
             ),
             model_options=SileroVadOptions(
                 threshold=0.6,
-                min_speech_duration_ms=250,
-                min_silence_duration_ms=100
+                min_speech_duration_ms=450,
+                min_silence_duration_ms=1000
             )), 
             modality="audio", 
             mode="send-receive"

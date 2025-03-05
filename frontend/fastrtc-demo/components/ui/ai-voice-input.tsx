@@ -72,10 +72,7 @@ export function AIVoiceInput({
     <div className={cn("w-full py-4", className)}>
       <div className="relative max-w-xl w-full mx-auto flex items-center flex-col gap-4">
         <div className={cn(
-          "px-2 py-1 rounded-md text-xs font-medium",
-          status === 'connected' ? "bg-green-500/20 text-green-700 dark:text-green-300" :
-          status === 'connecting' ? "bg-yellow-500/20 text-yellow-700 dark:text-yellow-300" :
-          "bg-red-500/20 text-red-700 dark:text-red-300"
+          "px-2 py-1 rounded-md text-xs font-medium bg-black/10 dark:bg-white/10 text-gray-700 dark:text-white"
         )}>
           {status === 'connected' ? 'Connected' : status === 'connecting' ? 'Connecting...' : 'Disconnected'}
         </div>

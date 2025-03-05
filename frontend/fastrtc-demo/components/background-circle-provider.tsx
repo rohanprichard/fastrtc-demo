@@ -36,7 +36,8 @@ export function BackgroundCircleProvider() {
                 }
             },
             onAudioLevel: (level) => {
-                setAudioLevel(level);
+                // Apply some smoothing to the audio level
+                setAudioLevel(prev => prev * 0.7 + level * 0.3);
             }
         });
         setWebrtcClient(client);

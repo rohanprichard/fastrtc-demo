@@ -7,7 +7,6 @@ import { cn } from "@/lib/utils";
 interface AIVoiceInputProps {
   onStart?: () => void;
   onStop?: (duration: number) => void;
-  visualizerBars?: number;
   isConnected?: boolean;
   className?: string;
 }
@@ -15,7 +14,6 @@ interface AIVoiceInputProps {
 export function AIVoiceInput({
   onStart,
   onStop,
-  visualizerBars = 48,
   isConnected = false,
   className
 }: AIVoiceInputProps) {
@@ -110,28 +108,6 @@ export function AIVoiceInput({
         >
           {formatTime(time)}
         </span>
-
-        <div className="h-4 w-64 flex items-center justify-center gap-0.5">
-          {[...Array(visualizerBars)].map((_, i) => (
-            <div
-              key={i}
-              className={cn(
-                "w-0.5 rounded-full transition-all duration-300",
-                active
-                  ? "bg-black/50 dark:bg-white/50 animate-pulse"
-                  : "bg-black/10 dark:bg-white/10 h-1"
-              )}
-              style={
-                active && isClient
-                  ? {
-                      height: `${20 + Math.random() * 80}%`,
-                      animationDelay: `${i * 0.05}s`,
-                    }
-                  : undefined
-              }
-            />
-          ))}
-        </div>
       </div>
     </div>
   );

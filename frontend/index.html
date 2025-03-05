@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FastRTC Audio Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #333;
+        }
+        
+        .container {
+            margin-top: 40px;
+        }
+        
+        button {
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .status {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        
+        .connected {
+            background-color: #dff0d8;
+            color: #3c763d;
+        }
+        
+        .disconnected {
+            background-color: #f2dede;
+            color: #a94442;
+        }
+        
+        .connecting {
+            background-color: #fcf8e3;
+            color: #8a6d3b;
+        }
+        
+        .audio-controls {
+            margin-top: 30px;
+        }
+        
+        audio {
+            width: 100%;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>FastRTC Audio Demo</h1>
+    
+    <div class="container">
+        <div id="status" class="status disconnected">
+            Status: Disconnected
+        </div>
+        
+        <div class="audio-controls">
+            <button id="startButton">Start Microphone</button>
+            <button id="stopButton" disabled>Stop Microphone</button>
+        </div>
+        
+        <audio id="audioOutput" controls autoplay hidden></audio>
+    </div>
+    
+    <script src="/script.js"></script>
+</body>
+</html> 

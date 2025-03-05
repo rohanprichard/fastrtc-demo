@@ -33,14 +33,13 @@ def echo(audio):
 
     llm_time = time.time()
     response = openai_client.chat.completions.create(
-        model="gpt-4o-mini",
+        model="gpt-3.5-turbo",
         messages=[{"role": "user", "content": sys_prompt + "\n\n" + prompt}],
         max_tokens=200,
     )
     prompt = response.choices[0].message.content
     logging.info(f"LLM took {time.time() - llm_time} seconds")
 
-    tts_time = time.time()
     for audio_chunk in tts_model.stream_tts_sync(prompt):
         yield audio_chunk
 

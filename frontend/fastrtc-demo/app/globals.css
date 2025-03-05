@@ -124,3 +124,7 @@
     @apply bg-background text-foreground;
   }
 }
+
+.no-transitions * {
+  transition: none !important;
+}

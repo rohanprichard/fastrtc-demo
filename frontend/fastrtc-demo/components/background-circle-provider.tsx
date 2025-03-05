@@ -13,6 +13,18 @@ export function BackgroundCircleProvider() {
     const [audioLevel, setAudioLevel] = useState(0);
     const audioRef = useRef<HTMLAudioElement>(null);
 
+    // Get all available variants
+    const variants = Object.keys(
+        COLOR_VARIANTS
+    ) as (keyof typeof COLOR_VARIANTS)[];
+
+    // Function to change to the next color variant
+    const changeVariant = () => {
+        const currentIndex = variants.indexOf(currentVariant);
+        const nextVariant = variants[(currentIndex + 1) % variants.length];
+        setCurrentVariant(nextVariant);
+    };
+
     useEffect(() => {
         // Initialize WebRTC client
         const client = new WebRTCClient({
@@ -43,7 +55,10 @@ export function BackgroundCircleProvider() {
     };
 
     return (
-        <div className="relative w-full h-screen">
+        <div 
+            className="relative w-full h-full"
+            onClick={changeVariant} // Add click handler to change color
+        >
             <BackgroundCircles 
                 variant={currentVariant} 
                 audioLevel={audioLevel}

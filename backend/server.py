@@ -46,28 +46,41 @@ def echo(audio):
     logging.info(f"STT took {time.time() - stt_time} seconds")
 
     llm_time = time.time()
-
-    response = openai_client.chat.completions.create(
-        model="gpt-3.5-turbo",
-        messages=messages,
-        max_tokens=200,
-    )
-    prompt = response.choices[0].message.content
-    messages.append({"role": "assistant", "content": prompt})
-    logging.info(f"LLM response: {prompt}")
-
-    logging.info(f"LLM took {time.time() - llm_time} seconds")
-
-    audio_stream = elevenlabs_client.text_to_speech.convert_as_stream(
-        text=prompt,
-        voice_id="JBFqnCBsd6RMkjVDRZzb",
-        model_id="eleven_multilingual_v2",
-        output_format="pcm_24000",
-    )
     
+    def text_stream():
+        global full_response  
+        full_response = ""
+        
+        response = openai_client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=messages,
+            max_tokens=200,
+            stream=True
+        )
+        
+        for chunk in response:
+            if chunk.choices[0].finish_reason == "stop":
+                break
+            if chunk.choices[0].delta.content:
+                full_response += chunk.choices[0].delta.content
+                yield chunk.choices[0].delta.content
+
+    audio_stream = elevenlabs_client.generate(
+        text=text_stream(),
+        voice="Rachel",  # Cassidy is also really good
+        model="eleven_multilingual_v2",
+        output_format="pcm_24000",
+        stream=True
+    )
+
     for audio_chunk in audio_stream:
         audio_array = np.frombuffer(audio_chunk, dtype=np.int16).astype(np.float32) / 32768.0
         yield (24000, audio_array)
+
+    messages.append({"role": "assistant", "content": full_response + " "})
+    logging.info(f"LLM response: {full_response}")
+    logging.info(f"LLM took {time.time() - llm_time} seconds")
+        
 
 
 stream = Stream(ReplyOnPause(echo,

@@ -1,57 +1,118 @@
-import os
-
 import fastapi
 from fastapi.responses import FileResponse
-from fastrtc import ReplyOnPause, Stream, get_stt_model, get_tts_model
+from fastrtc import ReplyOnPause, Stream, get_stt_model
+from fastrtc import AlgoOptions, SileroVadOptions
 from openai import OpenAI
 import logging
 import time
+from fastapi.middleware.cors import CORSMiddleware
+from elevenlabs import stream
+from elevenlabs.client import ElevenLabs
+import numpy as np
+import io
 
-from .env import DEEPSEEK_API_KEY
+from .env import LLM_API_KEY, ELEVENLABS_API_KEY
 
 stt_model = get_stt_model()
-tts_model = get_tts_model()
 
 sys_prompt = """
-You are a helpful assistant. You are witty, engaging and fun. You love being interactive and making jokes.
+You are a helpful assistant. You are witty, engaging and fun. You love being interactive with the user. 
+Begin a conversation with a self-deprecating joke like 'I'm not sure if I'm ready for this...' or 'I bet you already regret clicking that button...'
 """
 
-deepseek_client = OpenAI(
-    api_key=DEEPSEEK_API_KEY, base_url="https://api.deepseek.com/v1"
+messages = [{"role": "system", "content": sys_prompt}]
+
+openai_client = OpenAI(
+    api_key=LLM_API_KEY
 )
+
+elevenlabs_client = ElevenLabs(api_key=ELEVENLABS_API_KEY)
 
 logging.basicConfig(level=logging.INFO)
 
 def echo(audio):
     # yield audio
-    # Uncomment these lines when you want to use the full functionality
     stt_time = time.time()
+
     logging.info("Performing STT")
     prompt = stt_model.stt(audio)
+    if prompt == "":
+        logging.info("STT returned empty string")
+        return
+    logging.info(f"STT response: {prompt}")
+
+    messages.append({"role": "user", "content": prompt})
+
     logging.info(f"STT took {time.time() - stt_time} seconds")
 
     llm_time = time.time()
-    response = deepseek_client.chat.completions.create(
-        model="deepseek-chat",
-        messages=[{"role": "user", "content": sys_prompt + "\n\n" + prompt}],
-        max_tokens=200,
+    
+    def text_stream():
+        global full_response  
+        full_response = ""
+        
+        response = openai_client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=messages,
+            max_tokens=200,
+            stream=True
+        )
+        
+        for chunk in response:
+            if chunk.choices[0].finish_reason == "stop":
+                break
+            if chunk.choices[0].delta.content:
+                full_response += chunk.choices[0].delta.content
+                yield chunk.choices[0].delta.content
+
+    audio_stream = elevenlabs_client.generate(
+        text=text_stream(),
+        voice="Rachel",  # Cassidy is also really good
+        model="eleven_multilingual_v2",
+        output_format="pcm_24000",
+        stream=True
     )
-    prompt = response.choices[0].message.content
+
+    for audio_chunk in audio_stream:
+        audio_array = np.frombuffer(audio_chunk, dtype=np.int16).astype(np.float32) / 32768.0
+        yield (24000, audio_array)
+
+    messages.append({"role": "assistant", "content": full_response + " "})
+    logging.info(f"LLM response: {full_response}")
     logging.info(f"LLM took {time.time() - llm_time} seconds")
+        
 
-    tts_time = time.time()
-    for audio_chunk in tts_model.stream_tts_sync(prompt):
-        yield audio_chunk
 
-stream = Stream(ReplyOnPause(echo), modality="audio", mode="send-receive")
+stream = Stream(ReplyOnPause(echo,
+            algo_options=AlgoOptions(
+                audio_chunk_duration=0.8,
+                started_talking_threshold=0.25,
+                speech_threshold=0.3
+            ),
+            model_options=SileroVadOptions(
+                threshold=0.7,
+                min_speech_duration_ms=450,
+                min_silence_duration_ms=1000
+            )), 
+            modality="audio", 
+            mode="send-receive"
+        )
 
 app = fastapi.FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 stream.mount(app)
 
-@app.get("/")
-async def get_index():
-    return FileResponse("frontend/index.html")
-
-@app.get("/script.js")
-async def get_script():
-    return FileResponse("frontend/script.js")
+@app.get("/reset")
+async def reset():
+    global messages
+    logging.info("Resetting chat")
+    messages = [{"role": "system", "content": sys_prompt}]
+    return {"status": "success"}

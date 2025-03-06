@@ -2,7 +2,7 @@
 A simple POC for a fast real-time chat application using FastAPI and FastRTC. I wanted to make one as an example with HTML, rather than just Gradio.
 
 ## Setup
-1. Set your OpenAI API key in an `.env` file based on the `.env.example` file
+1. Set your OpenAI and ElevenLabs API key in an `.env` file based on the `.env.example` file
 2. Create a virtual environment and install the dependencies
     ```bash
     python3 -m venv env

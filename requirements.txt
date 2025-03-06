@@ -1,4 +1,5 @@
 openai
 fastapi
 python-dotenv
+elevenlabs
 fastrtc[vad, stt, tts]

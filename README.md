@@ -1,5 +1,5 @@
 # FastRTC POC
-A simple POC for a fast real-time chat application using FastAPI and FastRTC. I wanted to make one as an example with HTML, rather than just Gradio.
+A simple POC for a fast real-time chat application using FastAPI and FastRTC. I wanted to make one as an example with a modern web framework like Next.js, rather than just Gradio.
 
 ## Setup
 1. Set your OpenAI and ElevenLabs API key in an `.env` file based on the `.env.example` file
@@ -27,3 +27,4 @@ A simple POC for a fast real-time chat application using FastAPI and FastRTC. I 
 
 7. Reset chats by clicking the trash button on the bottom right
 
+Credits for the UI elements go to KokonutUI[https://github.com/kokonutd]

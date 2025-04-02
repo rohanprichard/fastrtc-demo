@@ -10,14 +10,28 @@ A simple POC for a fast real-time voice chat application using FastAPI and FastR
     pip install -r requirements.txt
     ```
 
+    For windows, 
+    ```bash
+    python -m venv env
+    .\env\Scripts\activate
+    pip install -r requirements.txt
+    ```
+
+
 3. Run the server
     ```bash
     ./run.sh
     ```
+    Windows: 
+    ```bash
+    uvicorn backend.server:app --host 0.0.0.0 --port 8000
+    ```
+
 4. Navigate into the frontend directory
     ```bash
     cd frontend/fastrtc-demo
     ```
+    
 5. Run the frontend
     ```bash
     npm install

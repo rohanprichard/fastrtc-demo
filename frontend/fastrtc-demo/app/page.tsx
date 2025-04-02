@@ -1,6 +1,7 @@
 import { BackgroundCircleProvider } from "@/components/background-circle-provider";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { ResetChat } from "@/components/ui/reset-chat";
+
 export default function Home() {
   return (
     <div className="flex flex-col items-center justify-center h-screen">

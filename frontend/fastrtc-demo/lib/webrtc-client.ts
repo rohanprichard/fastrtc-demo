@@ -4,6 +4,8 @@ interface WebRTCClientOptions {
     onMessage?: (message: any) => void;
     onAudioStream?: (stream: MediaStream) => void;
     onAudioLevel?: (level: number) => void;
+    audioInputDeviceId?: string;
+    audioOutputDeviceId?: string;
 }
 
 export class WebRTCClient {
@@ -15,20 +17,51 @@ export class WebRTCClient {
     private analyser: AnalyserNode | null = null;
     private dataArray: Uint8Array | null = null;
     private animationFrameId: number | null = null;
+    private currentInputDeviceId: string | undefined = undefined;
+    private currentOutputDeviceId: string | undefined = undefined;
 
     constructor(options: WebRTCClientOptions = {}) {
         this.options = options;
+        this.currentInputDeviceId = options.audioInputDeviceId;
+        this.currentOutputDeviceId = options.audioOutputDeviceId;
+    }
+
+    // Method to change audio input device
+    setAudioInputDevice(deviceId: string) {
+        this.currentInputDeviceId = deviceId;
+        
+        // If we're already connected, reconnect with the new device
+        if (this.peerConnection) {
+            this.disconnect();
+            this.connect();
+        }
+    }
+
+    // Method to change audio output device
+    setAudioOutputDevice(deviceId: string) {
+        this.currentOutputDeviceId = deviceId;
+        
+        // Apply to any current audio elements
+        if (this.options.onAudioStream) {
+            // The onAudioStream callback should handle setting the output device
+            // We'll pass the updated device ID through the options
+            this.options.audioOutputDeviceId = deviceId;
+        }
     }
 
     async connect() {
         try {
             this.peerConnection = new RTCPeerConnection();
             
-            // Get user media
+            // Get user media with specific device if specified
             try {
-                this.mediaStream = await navigator.mediaDevices.getUserMedia({
-                    audio: true
-                });
+                const constraints: MediaStreamConstraints = {
+                    audio: this.currentInputDeviceId 
+                        ? { deviceId: { exact: this.currentInputDeviceId } } 
+                        : true
+                };
+                
+                this.mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
             } catch (mediaError: any) {
                 console.error('Media error:', mediaError);
                 if (mediaError.name === 'NotAllowedError') {
@@ -50,7 +83,15 @@ export class WebRTCClient {
             
             this.peerConnection.addEventListener('track', (event) => {
                 if (this.options.onAudioStream) {
-                    this.options.onAudioStream(event.streams[0]);
+                    const stream = event.streams[0];
+                    
+                    // If we have an audio output device specified and the browser supports setSinkId
+                    if (this.currentOutputDeviceId && 'setSinkId' in HTMLAudioElement.prototype) {
+                        // We'll let the callback handle this, as we need access to the audio element
+                        this.options.audioOutputDeviceId = this.currentOutputDeviceId;
+                    }
+                    
+                    this.options.onAudioStream(stream);
                 }
             });
             

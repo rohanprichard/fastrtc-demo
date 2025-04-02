@@ -124,28 +124,41 @@ export function BackgroundCircles({
     
     // Update animation based on audio level
     useEffect(() => {
+        let timer: NodeJS.Timeout | null = null;
+        
         if (isActive && audioLevel > 0) {
             // Simple enhancement of audio level for more dramatic effect
             const enhancedLevel = Math.min(1, audioLevel * 1.5);
             
-            setAnimationParams({
-                scale: 1 + enhancedLevel * 0.3,
-                duration: Math.max(2, 5 - enhancedLevel * 3),
-                intensity: enhancedLevel
-            });
+            // Only update if there's a significant change to avoid constant re-renders
+            if (Math.abs(enhancedLevel - animationParams.intensity) > 0.05) {
+                setAnimationParams({
+                    scale: 1 + enhancedLevel * 0.3,
+                    duration: Math.max(2, 5 - enhancedLevel * 3),
+                    intensity: enhancedLevel
+                });
+            }
         } else if (animationParams.intensity > 0) {
             // Only reset if we need to (prevents unnecessary updates)
-            const timer = setTimeout(() => {
-                setAnimationParams({
-                    scale: 1,
-                    duration: 5,
-                    intensity: 0
+            timer = setTimeout(() => {
+                setAnimationParams(prev => {
+                    // Only update if we're still above 0 intensity to prevent unnecessary renders
+                    if (prev.intensity > 0) {
+                        return {
+                            scale: 1,
+                            duration: 5,
+                            intensity: 0
+                        };
+                    }
+                    return prev;
                 });
             }, 300);
-            
-            return () => clearTimeout(timer);
         }
-    }, [audioLevel, isActive, animationParams.intensity]);
+        
+        return () => {
+            if (timer) clearTimeout(timer);
+        };
+    }, [audioLevel, isActive]);  // Remove animationParams.intensity from dependencies
     
     return (
         <>

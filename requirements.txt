@@ -1,5 +1,5 @@
-openai
-fastapi
+openai==1.70.0
+fastapi==0.115.12
 python-dotenv
-elevenlabs
-fastrtc[vad]
+elevenlabs==1.56.0
+fastrtc[vad, stt]==0.0.19

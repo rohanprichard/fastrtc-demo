@@ -1,8 +1,9 @@
 # FastRTC POC
 A simple POC for a fast real-time voice chat application using FastAPI and FastRTC by [rohanprichard](https://github.com/rohanprichard). I wanted to make one as an example with more production-ready languages, rather than just Gradio.
 
+
 ## Setup
-1. Set your OpenAI API key in an `.env` file based on the `.env.example` file
+1. Set your OpenAI and ElevenLabs API key in an `.env` file based on the `.env.example` file
 2. Create a virtual environment and install the dependencies
     ```bash
     python3 -m venv env
@@ -84,3 +85,4 @@ The prompt can be changed in the `backend/server.py` file and modified as you li
 
 ## Credits:
 Credit for the UI components goes to Shadcn, Aceternity UI and Kokonut UI.
+

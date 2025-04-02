@@ -10,9 +10,26 @@ from elevenlabs import VoiceSettings, stream
 from elevenlabs.client import ElevenLabs
 import numpy as np
 import io
+import platform
+import os
+import socket
 
 from .env import LLM_API_KEY, ELEVENLABS_API_KEY
 
+
+logging.basicConfig(level=logging.INFO)
+
+if platform.system() == 'Windows':
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        s.connect(('8.8.8.8', 80))
+        local_ip = s.getsockname()[0]
+    except Exception:
+        local_ip = '127.0.0.1'
+    finally:
+        s.close()
+
+    os.environ['WEBRTC_IP'] = local_ip
 
 sys_prompt = """
 You are a helpful assistant. You are witty, engaging and fun. You love being interactive with the user. 

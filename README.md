@@ -1,88 +1,65 @@
-# FastRTC POC
-A simple POC for a fast real-time voice chat application using FastAPI and FastRTC by [rohanprichard](https://github.com/rohanprichard). I wanted to make one as an example with more production-ready languages, rather than just Gradio.
+# FastRTC Voice Demo
 
+A reference implementation of a browser-based, real-time voice conversation experience. The repository separates a FastAPI/FastRTC backend from a Next.js frontend so the voice pipeline and interface can evolve independently.
 
-## Setup
-1. Set your OpenAI and ElevenLabs API key in an `.env` file based on the `.env.example` file
-2. Create a virtual environment and install the dependencies
-    ```bash
-    python3 -m venv env
-    source env/bin/activate
-    pip install -r requirements.txt
-    ```
+## What it demonstrates
 
-    For windows, 
-    ```bash
-    python -m venv env
-    .\env\Scripts\activate
-    pip install -r requirements.txt
-    ```
+- microphone capture and browser voice interaction
+- FastRTC-powered real-time transport
+- speech-to-text and text-to-speech through ElevenLabs
+- LLM responses through an OpenAI-compatible API key
+- tunable voice-activity detection settings
 
+## Architecture
 
-3. Run the server
-    ```bash
-    ./run.sh
-    ```
-    Windows: 
-    ```bash
-    uvicorn backend.server:app --host 0.0.0.0 --port 8000
-    ```
+```text
+Browser (Next.js) → FastAPI + FastRTC → STT / LLM / TTS providers
+```
 
-4. Navigate into the frontend directory
-    ```bash
-    cd frontend/fastrtc-demo
-    ```
-    
-5. Run the frontend
-    ```bash
-    npm install
-    npm run dev
-    ```
-6. Click the microphone icon and start chatting!
+The browser UI lives in `frontend/fastrtc-demo`; the Python backend lives in `backend/`.
 
-7. Reset chats by clicking the trash button on the bottom right
+## Run locally
 
-## Notes
-- The STT is currently using the ElevenLabs API.
-- The LLM is currently using the OpenAI API.
-- The TTS is currently using the ElevenLabs API.
-- The VAD is currently using the Silero VAD model.
-- You may need to install ffmpeg if you get errors in STT
+### 1. Configure provider keys
 
-The prompt can be changed in the `backend/server.py` file and modified as you like.
+Copy `.env.example` to `.env` and supply your own keys:
 
-### Audio Parameters 
+```env
+LLM_API_KEY=...
+ELEVENLABS_API_KEY=...
+```
 
-#### AlgoOptions
+Never commit `.env` or expose provider keys in a browser client.
 
-- **audio_chunk_duration**: Length of audio chunks in seconds. Smaller values allow for faster processing but may be less accurate.
-- **started_talking_threshold**: If a chunk has more than this many seconds of speech, the system considers that the user has started talking.
-- **speech_threshold**: After the user has started speaking, if a chunk has less than this many seconds of speech, the system considers that the user has paused.
+### 2. Start the backend
 
-#### SileroVadOptions
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+./run.sh
+```
 
-- **threshold**: Speech probability threshold (0.0-1.0). Values above this are considered speech. Higher values are more strict.
-- **min_speech_duration_ms**: Speech segments shorter than this (in milliseconds) are filtered out.
-- **min_silence_duration_ms**: The system waits for this duration of silence (in milliseconds) before considering speech to be finished.
-- **speech_pad_ms**: Padding added to both ends of detected speech segments to prevent cutting off words.
-- **max_speech_duration_s**: Maximum allowed duration for a speech segment in seconds. Prevents indefinite listening.
+On Windows, run `uvicorn backend.server:app --host 0.0.0.0 --port 8000` after installing dependencies.
 
-### Tuning Recommendations
+### 3. Start the frontend
 
-- If the AI interrupts you too early:
-  - Increase `min_silence_duration_ms`
-  - Increase `speech_threshold`
-  - Increase `speech_pad_ms`
+```bash
+cd frontend/fastrtc-demo
+npm install
+npm run dev
+```
 
-- If the AI is slow to respond after you finish speaking:
-  - Decrease `min_silence_duration_ms`
-  - Decrease `speech_threshold`
+Open the local URL printed by Next.js and allow microphone access when prompted.
 
-- If the system fails to detect some speech:
-  - Lower the `threshold` value
-  - Decrease `started_talking_threshold`
+## Voice tuning
 
+The backend exposes voice-activity detection settings such as speech threshold, silence duration, speech padding, and maximum segment duration. Increase silence duration if the assistant interrupts too quickly; decrease it if responses feel slow.
 
-## Credits:
-Credit for the UI components goes to Shadcn, Aceternity UI and Kokonut UI.
+## Operational notes
 
+This is a demonstration project. Running it requires billable third-party API credentials, HTTPS in most production microphone contexts, and a deployment design that keeps provider keys on the server.
+
+## License
+
+MIT
